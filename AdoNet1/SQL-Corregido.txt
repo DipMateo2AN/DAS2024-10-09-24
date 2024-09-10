@@ -1,0 +1,50 @@
+create database DAS_1
+go
+use DAS_1
+go
+create table Categorias (Id int primary key not null identity, Codigo nvarchar(15) not null unique, Descripcion nvarchar(150));
+go
+--
+create procedure sp_RecuperarCategorias
+as select * from Categorias;
+go
+--
+create procedure sp_InsertarCategoria (@codigo nvarchar(15), @descripcion nvarchar(150))
+as insert into Categorias (Codigo, Descripcion) values (@codigo, @descripcion);
+go
+--
+create procedure sp_ModificarCategoria (@codigo nvarchar(15), @descripcion nvarchar(150))
+as update Categorias set Descripcion = @descripcion where Codigo = @codigo;
+--
+go
+--
+create procedure sp_EliminarCategoria (@codigo nvarchar(15))
+as delete from Categorias where Codigo = @codigo;
+go
+--
+create table Productos (Id int primary key not null identity, Codigo nvarchar(15) not null unique, Descripcion nvarchar(150), PrecioCompra decimal(18,2),PrecioVenta decimal(18,2),CantidadActual int, CantidadMinima int, CategoriaId int not null foreign key references Categorias(Id));
+go
+--
+create procedure sp_RecuperarProductos
+as select p.Codigo,p.Descripcion, p.PrecioCompra,p.PrecioVenta,p.CantidadActual, p.CantidadMinima , c.Codigo as CodigoCategoria from Productos p inner join Categorias c on c.Id = p.CategoriaId;
+go
+--
+create procedure sp_InsertarProducto (@codigo nvarchar(15), @descripcion nvarchar(150),@PrecioCompra decimal(18,2),@PrecioVenta decimal(18,2),@CantidadActual int, @CantidadMinima int,@CodigoCategoria nvarchar(15))
+as begin
+declare @CategoriaId int;  
+set @CategoriaId = (select Id from Categorias where Codigo = @CodigoCategoria);
+  insert into Productos (Codigo, Descripcion, PrecioCompra, PrecioVenta, CantidadActual, CantidadMinima, CategoriaId)
+	values (@codigo, @descripcion, @PrecioCompra, @PrecioVenta, @CantidadActual, @CantidadMinima, @CategoriaId);
+end;
+go
+--
+create procedure sp_ActualizarProducto (@codigo nvarchar(15), @descripcion nvarchar(150),@PrecioCompra decimal(18,2),@PrecioVenta decimal(18,2),@CantidadActual int, @CantidadMinima int,@CodigoCategoria nvarchar(15))
+as begin 
+declare @CategoriaId int;
+set @CategoriaId = (select Id from Categorias where Codigo = @CodigoCategoria);
+update Productos set Descripcion = @descripcion,PrecioCompra = @PrecioCompra, PrecioVenta = @PrecioVenta, CantidadActual = @CantidadActual, CantidadMinima = @CantidadMinima, CategoriaId = @CategoriaId where Codigo = @codigo;
+end;
+--
+go
+create procedure sp_EliminarProducto (@codigo nvarchar(15))
+as delete from Productos where Codigo = @codigo;
